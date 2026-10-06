@@ -1,0 +1,82 @@
+name: Build Vencord with custom plugins
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout builder repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Clone Vencord
+        run: git clone --depth 1 https://github.com/Vendicated/Vencord.git vencord
+
+      - name: Install Vencord dependencies
+        working-directory: vencord
+        run: pnpm install --frozen-lockfile
+
+      - name: Install custom plugins
+        shell: bash
+        run: |
+          set -e
+          mkdir -p vencord/src/userplugins
+          python3 - <<'PY'
+          import json, os, zipfile, shutil
+          manifest=json.load(open("builder-plugins/manifest.json", encoding="utf-8"))
+          for item in manifest["plugins"]:
+              zpath=item["path"]
+              print("Installing", zpath)
+              with zipfile.ZipFile(zpath) as z:
+                  z.extractall("/tmp/plugin")
+              roots=os.listdir("/tmp/plugin")
+              candidates=[]
+              for root, dirs, files in os.walk("/tmp/plugin"):
+                  if "index.ts" in files or "index.tsx" in files:
+                      candidates.append(root)
+              if not candidates:
+                  raise SystemExit(f"No index.ts(x) found in {zpath}")
+              src=candidates[0]
+              name=os.path.basename(src)
+              dest=os.path.join("vencord/src/userplugins", name)
+              if os.path.exists(dest):
+                  shutil.rmtree(dest)
+              shutil.copytree(src, dest)
+              shutil.rmtree("/tmp/plugin")
+          PY
+
+      - name: Build Vencord
+        working-directory: vencord
+        run: pnpm build --standalone
+
+      - name: Package build
+        run: |
+          mkdir -p output
+          if [ -d vencord/dist ]; then
+            cp -a vencord/dist output/dist
+          else
+            echo "dist directory was not created"
+            find vencord -maxdepth 2 -type d -name dist -print
+            exit 1
+          fi
+          cd output
+          zip -r ../Vencord-custom-build.zip dist
+
+      - name: Upload Vencord build
+        uses: actions/upload-artifact@v4
+        with:
+          name: Vencord-custom-build
+          path: Vencord-custom-build.zip
+          retention-days: 14
