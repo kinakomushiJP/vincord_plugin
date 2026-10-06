@@ -1,0 +1,3 @@
+builder-plugins/*.zip
+.env
+.DS_Store
