@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vencord Web Builder</title>
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<div class="bg"></div>
+<main class="app">
+  <header>
+    <div>
+      <div class="eyebrow">CUSTOM VENCORD BUILDER</div>
+      <h1>Vencord Web Builder</h1>
+      <p>プラグインZIPを追加して、自分用のVencordをビルド。</p>
+    </div>
+    <div class="status" id="status">待機中</div>
+  </header>
+
+  <section class="card">
+    <h2>1. GitHub設定</h2>
+    <div class="grid">
+      <label>GitHubユーザー名<input id="owner" placeholder="your-name"></label>
+      <label>リポジトリ<input id="repo" placeholder="my-vencord-builder"></label>
+    </div>
+    <label>GitHub Token
+      <input id="token" type="password" placeholder="ghp_... / github_pat_...">
+    </label>
+    <small>Tokenは保存せず、ビルド開始時のAPI通信にだけ使用します。Actionsを実行できる権限が必要です。</small>
+  </section>
+
+  <section class="card">
+    <h2>2. プラグイン</h2>
+    <div id="drop" class="drop">
+      <strong>ZIPをここへドラッグ＆ドロップ</strong>
+      <span>または</span>
+      <button id="pick">ZIPを追加</button>
+      <input id="files" type="file" accept=".zip" multiple hidden>
+    </div>
+    <div id="plugins" class="plugins"></div>
+  </section>
+
+  <section class="card options">
+    <h2>3. ビルド設定</h2>
+    <label class="check"><input id="enableAll" type="checkbox" checked> 追加したプラグインを有効化</label>
+    <label class="check"><input id="clean" type="checkbox" checked> 前回の追加プラグインを置き換える</label>
+    <label class="check"><input id="artifact" type="checkbox" checked> 完成品ZIPをArtifactとして保存</label>
+  </section>
+
+  <button class="build" id="build">🚀 ビルド開始</button>
+
+  <section class="card log-card">
+    <div class="log-head"><h2>ビルド状況</h2><button id="clear">クリア</button></div>
+    <pre id="log">ここにビルド状況が表示されます。</pre>
+    <div id="result"></div>
+  </section>
+
+  <footer>Vencord Web Builder · GitHub Actions powered</footer>
+</main>
+<script src="./app.js"></script>
+</body>
+</html>
